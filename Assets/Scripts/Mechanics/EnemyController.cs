@@ -21,6 +21,8 @@ namespace Platformer.Mechanics
         public PatrolPath path;
         public AudioClip ouch;
         public Behavior movementBehavior;
+        public int followRange = 20;
+        public float movementSpeed = 1f;
 
         internal PatrolPath.Mover mover;
         internal AnimationController control;
@@ -56,19 +58,14 @@ namespace Platformer.Mechanics
                 if (path != null)
                 {
                     if (mover == null) mover = path.CreateMover(control.maxSpeed * 0.5f);
-                    control.move.x = Mathf.Clamp(mover.Position.x - transform.position.x, -1, 1);
+                    control.move.x = Mathf.Clamp(mover.Position.x - transform.position.x, -movementSpeed, movementSpeed);
                 }
             }else if (movementBehavior == Behavior.FOLLOW)
             {
-                var player = control.gameObject.GetComponent<PlayerController>().GetComponent<Transform>();
-                var enemy = this.GetComponent<Transform>();
-
-                if(player.position.x > enemy.position.x)
+                var player = FindObjectOfType<PlayerController>().gameObject;
+                if(player.transform.position.x < this.transform.position.x + followRange && player.transform.position.x > this.transform.position.x - followRange)
                 {
-                    control.move.x -= 1;
-                }else if(player.position.x < enemy.position.x)
-                {
-                    control.move.x += 1;
+                    control.move.x = Mathf.Clamp(player.transform.position.x - transform.position.x, -movementSpeed, movementSpeed);
                 }
             }
         }
