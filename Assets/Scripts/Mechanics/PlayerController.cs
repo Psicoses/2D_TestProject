@@ -35,6 +35,8 @@ namespace Platformer.Mechanics
         public bool controlEnabled = true;
 
         bool jump;
+        bool doubleJump;
+        bool hasDoubleJumped;
         Vector2 move;
         SpriteRenderer spriteRenderer;
         internal Animator animator;
@@ -58,6 +60,10 @@ namespace Platformer.Mechanics
                 move.x = Input.GetAxis("Horizontal");
                 if (jumpState == JumpState.Grounded && Input.GetButtonDown("Jump"))
                     jumpState = JumpState.PrepareToJump;
+                if (jumpState == JumpState.InFlight && !hasDoubleJumped && Input.GetButtonDown("Jump"))
+                {
+                    jumpState = JumpState.PrepareToDoubleJump;
+                }
                 else if (Input.GetButtonUp("Jump"))
                 {
                     stopJump = true;
@@ -75,11 +81,17 @@ namespace Platformer.Mechanics
         void UpdateJumpState()
         {
             jump = false;
+            doubleJump = false;
             switch (jumpState)
             {
                 case JumpState.PrepareToJump:
                     jumpState = JumpState.Jumping;
                     jump = true;
+                    stopJump = false;
+                    break;
+                case JumpState.PrepareToDoubleJump:
+                    jumpState = JumpState.PrepareToJump;
+                    doubleJump = true;
                     stopJump = false;
                     break;
                 case JumpState.Jumping:
@@ -98,6 +110,7 @@ namespace Platformer.Mechanics
                     break;
                 case JumpState.Landed:
                     jumpState = JumpState.Grounded;
+                    hasDoubleJumped = false;
                     break;
             }
         }
@@ -108,6 +121,12 @@ namespace Platformer.Mechanics
             {
                 velocity.y = jumpTakeOffSpeed * model.jumpModifier;
                 jump = false;
+            }
+            if (doubleJump)
+            {
+                velocity.y = jumpTakeOffSpeed * model.jumpModifier;
+                doubleJump = false;
+                hasDoubleJumped = true;
             }
             else if (stopJump)
             {
@@ -133,6 +152,7 @@ namespace Platformer.Mechanics
         {
             Grounded,
             PrepareToJump,
+            PrepareToDoubleJump,
             Jumping,
             InFlight,
             Landed

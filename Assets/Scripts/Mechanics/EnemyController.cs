@@ -12,8 +12,17 @@ namespace Platformer.Mechanics
     [RequireComponent(typeof(AnimationController), typeof(Collider2D))]
     public class EnemyController : MonoBehaviour
     {
+        public enum Behavior
+        {
+            PATH,
+            FOLLOW
+        }
+
         public PatrolPath path;
         public AudioClip ouch;
+        public Behavior movementBehavior;
+        public int followRange = 20;
+        public float movementSpeed = 1f;
 
         internal PatrolPath.Mover mover;
         internal AnimationController control;
@@ -44,12 +53,24 @@ namespace Platformer.Mechanics
 
         void Update()
         {
-            if (path != null)
+            if(movementBehavior == Behavior.PATH)
             {
-                if (mover == null) mover = path.CreateMover(control.maxSpeed * 0.5f);
-                control.move.x = Mathf.Clamp(mover.Position.x - transform.position.x, -1, 1);
+                if (path != null)
+                {
+                    if (mover == null) mover = path.CreateMover(control.maxSpeed * 0.5f);
+                    control.move.x = Mathf.Clamp(mover.Position.x - transform.position.x, -movementSpeed, movementSpeed);
+                }
+            }else if (movementBehavior == Behavior.FOLLOW)
+            {
+                var player = FindObjectOfType<PlayerController>().gameObject;
+                if(player.transform.position.x < this.transform.position.x + followRange && player.transform.position.x > this.transform.position.x - followRange)
+                {
+                    control.move.x = Mathf.Clamp(player.transform.position.x - transform.position.x, -movementSpeed, movementSpeed);
+                }
             }
         }
+
+        
 
     }
 }
